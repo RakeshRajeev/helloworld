@@ -10,7 +10,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v3
 
     - name: Log in to Docker Hub
       run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
@@ -33,7 +33,7 @@ jobs:
 
     - name: Upload Scan Results Artifact (Only on release/dev) 
       if: github.ref == 'refs/heads/release/dev'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: scan-results-${{ github.sha }}
         path: scan-results/
