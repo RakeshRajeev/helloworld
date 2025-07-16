@@ -36,4 +36,5 @@ jobs:
         git pull --rebase
         git add scan-results/
         git commit -m "Add scan result for ${{ github.sha }}"
-        git push
+        git remote set-url origin https://x-access-token:${{ secrets.GH_PAT }}@github.com/${{ github.repository }}
+        git push origin HEAD:${{ github.ref_name }}
