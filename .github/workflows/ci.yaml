@@ -28,15 +28,15 @@ jobs:
 
     - name: Conditionally Save and Commit Scan Results
       if: github.ref == 'refs/heads/release/dev'
+      env:
+        PAT_TOKEN: ${{ secrets.GH_PAT }}
       run: |
-        mkdir -p scan-results
-        cp scan-result.json scan-results/helloworld-${{ github.sha }}.json
-        git config user.name "ci-bot"
-        git config user.email "ci@pipeline.local"
-        git pull --rebase
-        git add scan-results/
-        git commit -m "Add scan result for ${{ github.sha }}"
-        git remote set-url origin https://x-access-token:${{ secrets.GH_PAT }}@github.com/${{ github.repository }}
-        git remote -v
-        git push origin HEAD:${{ github.ref_name }}
-
+       mkdir -p scan-results
+       cp scan-result.json scan-results/helloworld-${{ github.sha }}.json
+       git config user.name "ci-bot"
+       git config user.email "ci@pipeline.local"
+       git pull --rebase
+       git add scan-results/
+       git commit -m "Add scan result for ${{ github.sha }}"
+       git remote set-url origin https://x-access-token:$PAT_TOKEN@github.com/${{ github.repository }}
+       git push origin HEAD:${{ github.ref_name }}
