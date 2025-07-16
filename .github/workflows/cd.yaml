@@ -12,10 +12,14 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v3
 
+    - name: Get SHA of parent commit (from release/dev)
+      id: get-sha
+      run: echo "sha=$(git rev-parse HEAD^1)" >> $GITHUB_OUTPUT
+
     - name: Download Scan Artifact from release/dev
       uses: actions/download-artifact@v4
       with:
-        name: scan-results-${{ github.sha }}
+        name: scan-results-${{ steps.get-sha.outputs.sha }}
         path: scan-results/
 
     - name: Run Scan Validation Script
@@ -23,7 +27,7 @@ jobs:
         python3 scripts/validate-scan.py
       env:
         IMAGE_NAME: helloworld
-        IMAGE_TAG: ${{ github.sha }}
+        IMAGE_TAG: ${{ steps.get-sha.outputs.sha }}
 
     - name: Set up Kubeconfig for Docker Desktop
       run: |
@@ -32,10 +36,10 @@ jobs:
 
     - name: Pull Docker Image from Docker Hub
       run: |
-        docker pull ${{ secrets.DOCKER_USERNAME }}/helloworld:${{ github.sha }}
+        docker pull ${{ secrets.DOCKER_USERNAME }}/helloworld:${{ steps.get-sha.outputs.sha }}
 
     - name: Deploy using Helm
       run: |
         helm upgrade --install helloworld charts/helloworld \
           --set image.repository=${{ secrets.DOCKER_USERNAME }}/helloworld \
-          --set image.tag=${{ github.sha }}
+          --set image.tag=${{ steps.get-sha.outputs.sha }}
