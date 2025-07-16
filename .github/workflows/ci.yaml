@@ -31,7 +31,7 @@ jobs:
         --output scan-results/helloworld-${{ github.sha }}.json \
         ${{ secrets.DOCKER_USERNAME }}/helloworld:${{ github.sha }}
 
-    - name: Upload Scan Results Artifact (Only on release/dev) ✅
+    - name: Upload Scan Results Artifact (Only on release/dev) 
       if: github.ref == 'refs/heads/release/dev'
       uses: actions/upload-artifact@v3
       with:
