@@ -1,1 +1,1 @@
-echo "Trigger new image + scan" >> README.md
+echo "Trigger new image + scan" >> README.md.
