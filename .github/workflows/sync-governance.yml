@@ -1,0 +1,39 @@
+name: Sync Governance to UAT and Main
+
+on:
+  push:
+    branches:
+      - ci-config
+    paths:
+      - 'governance/**'
+      - 'scripts/validate-scan.py'
+
+jobs:
+  sync-governance:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout ci-config branch
+      uses: actions/checkout@v3
+
+    - name: Set up Git config
+      run: |
+        git config --global user.email "ci-bot@pipeline.local"
+        git config --global user.name "ci-bot"
+
+    - name: Fetch all branches
+      run: git fetch --all
+
+    - name: Sync to release/uat
+      run: |
+        git checkout release/uat
+        git checkout ci-config -- governance/ scripts/validate-scan.py
+        git commit -am "Sync governance from ci-config to release/uat"
+        git push origin release/uat
+
+    - name: Sync to main
+      run: |
+        git checkout main
+        git checkout ci-config -- governance/ scripts/validate-scan.py
+        git commit -am "Sync governance from ci-config to main"
+        git push origin main
