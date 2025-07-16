@@ -1,4 +1,4 @@
-name: Sync Governance to UAT and Main
+name: Propose Governance Sync to UAT and Main
 
 on:
   push:
@@ -11,29 +11,42 @@ on:
 jobs:
   sync-governance:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
 
     steps:
-    - name: Checkout ci-config branch
+    - name: Checkout repo
       uses: actions/checkout@v3
 
-    - name: Set up Git config
-      run: |
-        git config --global user.email "ci-bot@pipeline.local"
-        git config --global user.name "ci-bot"
+    - name: Create Pull Request to release/uat
+      uses: peter-evans/create-pull-request@v5
+      with:
+        base: release/uat
+        branch: governance-sync/uat
+        title: "Governance Sync: Update UAT"
+        body: |
+          This PR syncs governance and validation logic from `ci-config` into `release/uat`.
 
-    - name: Fetch all branches
-      run: git fetch --all
+          ✅ Files:
+          - `governance/`
+          - `scripts/validate-scan.py`
 
-    - name: Sync to release/uat
-      run: |
-        git checkout release/uat
-        git checkout ci-config -- governance/ scripts/validate-scan.py
-        git commit -am "Sync governance from ci-config to release/uat"
-        git push origin release/uat
+        commit-message: "Sync governance to UAT from ci-config"
+        delete-branch: true
 
-    - name: Sync to main
-      run: |
-        git checkout main
-        git checkout ci-config -- governance/ scripts/validate-scan.py
-        git commit -am "Sync governance from ci-config to main"
-        git push origin main
+    - name: Create Pull Request to main
+      uses: peter-evans/create-pull-request@v5
+      with:
+        base: main
+        branch: governance-sync/main
+        title: "Governance Sync: Update Main"
+        body: |
+          This PR syncs governance and validation logic from `ci-config` into `main`.
+
+          ✅ Files:
+          - `governance/`
+          - `scripts/validate-scan.py`
+
+        commit-message: "Sync governance to main from ci-config"
+        delete-branch: true
