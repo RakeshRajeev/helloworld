@@ -1,0 +1,6 @@
+approved_vulnerabilities:
+  - CVE-2024-12345
+  - CVE-2023-99999
+reason: "Temporary approval for hotfix"
+approved_by: "security-team"
+expires: "2024-12-31"
