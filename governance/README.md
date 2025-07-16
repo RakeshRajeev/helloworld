@@ -1,43 +1,105 @@
-Deployment Policy & Dispensation Guide (Simplified)
-1. Purpose
-This guide explains the rules we follow to deploy container images safely and what to do if we need to bypass those rules with proper approval.
 
-2. Deployment Policy (Simple Rules)
-We follow these basic rules during deployment:
+#  Governance-Enforced CI/CD Deployment Pipeline
 
-a.Only allow images that were scanned in CI and saved with a unique image SHA.
+This project implements a secure CI/CD architecture with strict separation of concerns, governance enforcement, and policy-based deployment gating.
 
-b.Block any image that has critical or high vulnerabilities.
+---
 
-c.The scan must be recent — within 7 days.
+##  Branch Strategy
 
-d.The image used in Helm must exactly match what was scanned (based on SHA).
+| Branch         | Purpose                                | Who Manages It       |
+|----------------|----------------------------------------|-----------------------|
+| `release/dev`  | Builds, scans, pushes images and scan results | Developers + CI      |
+| `release/uat`  | Staging deployment only (no builds)     | DevOps                |
+| `main`         | Production deployment only              | DevOps                |
+| `ci-config`    | Source of truth for workflows, governance, and scripts | SecOps / Platform team |
 
-e.Even during rollbacks, only pre-scanned and compliant images can be deployed.
+---
 
-3. Dispensation Process (What to Do if You Need an Exception)
-Sometimes, we may need to deploy even if the image has issues. In that case:
+##  Governance Sync PR Flow
 
-The developer creates a file (YAML) with the image SHA and justification.
+When changes are made to:
+- `governance/dispensations/*.yaml`
+- `scripts/validate-scan.py`
 
-This file is saved in a special GitHub folder: governance/.
+A GitHub Actions workflow in `ci-config` will:
+- Automatically create PRs to `release/uat` and `main`
+- These PRs must be reviewed and approved
+- Once merged, the governance rules are enforced during CD
 
-Someone from the Security team must review and approve it (via Pull Request).
+---
 
-The CD pipeline checks this approval file and only allows deployment if it's valid.
+##  Governance Enforcement
 
-4. Audit and Access Control
-All exceptions (dispensations) are tracked in GitHub.
+CD pipeline (in `cd.yaml`) will:
+- Pull the image scan result from `release/dev/scan-results/`
+- Run `scripts/validate-scan.py` before deployment
+- If high/critical CVEs are found:
+  -  Deployment is allowed only if a matching dispensation file exists
+  -  Otherwise, deployment is blocked
 
-a.Only the Security team can approve or modify files in governance/.
+---
 
-b. This keeps everything transparent and auditable.
+##  Required Files Per Branch
 
-5. Optional Future Additions
-We might later add:
+###  `release/dev`
+- `.github/workflows/ci.yaml`
+- `app/`, `Dockerfile`
+- `scan-results/`
 
-a.Approvals through a form or ServiceNow
+### `release/uat` & `main`
+- `.github/workflows/cd.yaml`
+- `charts/helloworld/`
+- `scripts/validate-scan.py`
+- `governance/dispensations/`
+-  NO build, app, or scan logic
 
-b. Alerts in Slack when a rule is bypassed
+### `ci-config`
+- `.github/workflows/ci.yaml` (source)
+- `.github/workflows/sync-governance.yml`
+- `scripts/validate-scan.py`
+- `governance/dispensations/`
 
-c. Auto-expiry for old approvals
+---
+
+## Sample Dispensation File Format
+
+```yaml
+approved_vulnerabilities:
+  - CVE-2024-12345
+  - CVE-2023-99999
+reason: "Temporary approval for hotfix"
+approved_by: "security-team"
+expires: "2024-12-31"
+```
+
+---
+
+## 👥 Access and Responsibility Separation
+
+| Role       | Permissions                          |
+|------------|--------------------------------------|
+| Developer  | Works in `release/dev`, can't deploy |
+| DevOps     | Monitors CD, deploys to UAT & main   |
+| Security   | Owns `ci-config`, dispensation files |
+
+---
+
+## Test Deployment Flow
+
+1. Build and scan in `release/dev`
+2. Merge to `release/uat` → triggers CD
+3. CD checks scan + governance and deploys
+4. Promote to `main` via approved PR
+
+---
+
+## Secure by Default
+
+- No CD without valid scan
+- No production deployment without review
+- No bypass of CVE check without documented approval
+
+---
+
+
