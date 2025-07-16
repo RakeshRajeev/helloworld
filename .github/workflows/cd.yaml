@@ -33,4 +33,4 @@ jobs:
       run: |
         helm upgrade --install helloworld charts/helloworld \
           --set image.repository=${{ secrets.DOCKER_USERNAME }}/helloworld \
-          --set image.tag=0be5d968f9cd0180e66051c75fde96056e23d208
+          --set image.tag=${{ github.sha }}
