@@ -1,0 +1,34 @@
+
+name: CD Pipeline
+
+on:
+  push:
+    branches: [release/uat, main]
+
+jobs:
+  deploy-and-validate:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Fetch Scan Result from release/dev
+      run: |
+        git fetch origin release/dev
+        git checkout origin/release/dev -- scan-results/helloworld-${{ github.sha }}.json
+
+    - name: Run Scan Validation Script
+      run: |
+        python3 scripts/validate-scan.py
+      env:
+        IMAGE_NAME: helloworld
+        IMAGE_TAG: ${{ github.sha }}
+
+    - name: Pull Docker Image from Docker Hub
+      run: |
+        docker pull ${{ secrets.DOCKER_USERNAME }}/helloworld:${{ github.sha }}
+
+    - name: Simulated Deployment to Docker Desktop
+      run: |
+        docker run -d -p 8080:5000 ${{ secrets.DOCKER_USERNAME }}/helloworld:${{ github.sha }}
