@@ -1,4 +1,0 @@
-image: docker.io/your-username/helloworld@sha256:abc123
-reason: Temporary bypass for known library issue
-approved_by: sec-team
-expiry: 2025-07-30
