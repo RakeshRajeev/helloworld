@@ -17,10 +17,14 @@ jobs:
       run: |
         docker build -t ${{ secrets.DOCKER_USERNAME }}/helloworld:${{ github.sha }} ./app
 
-    - name: Scan Image with Trivy
+    - name: Push Docker Image
+      run: |
+        docker push ${{ secrets.DOCKER_USERNAME }}/helloworld:${{ github.sha }}
+
+    - name: Install Trivy and Scan Image
       run: |
         curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
-        ./trivy image --format json --output scan-result.json ${{ secrets.DOCKER_USERNAME }}/helloworld:${{ github.sha }}
+        ./bin/trivy image --format json --output scan-result.json ${{ secrets.DOCKER_USERNAME }}/helloworld:${{ github.sha }}
 
     - name: Conditionally Save and Commit Scan Results
       if: github.ref == 'refs/heads/release/dev'
