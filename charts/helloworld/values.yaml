@@ -1,0 +1,9 @@
+image:
+  repository: RakeshRajeev/helloworld
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: NodePort
+  port: 80
+  targetPort: 5000

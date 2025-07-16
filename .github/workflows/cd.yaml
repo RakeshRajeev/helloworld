@@ -29,6 +29,8 @@ jobs:
       run: |
         docker pull ${{ secrets.DOCKER_USERNAME }}/helloworld:${{ github.sha }}
 
-    - name: Simulated Deployment to Docker Desktop
+    - name: Deploy using Helm
       run: |
-        docker run -d -p 8080:5000 ${{ secrets.DOCKER_USERNAME }}/helloworld:${{ github.sha }}
+        helm upgrade --install helloworld charts/helloworld \
+          --set image.repository=${{ secrets.DOCKER_USERNAME }}/helloworld \
+          --set image.tag=${{ github.sha }}
