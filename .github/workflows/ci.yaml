@@ -26,21 +26,14 @@ jobs:
     - name: Install Trivy and Scan Image
       run: |
         curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
-        ./bin/trivy image --format json --output scan-result.json ${{ secrets.DOCKER_USERNAME }}/helloworld:${{ github.sha }}
-
-    - name: Conditionally Save and Commit Scan Results
-      if: github.ref == 'refs/heads/release/dev'
-      run: |
         mkdir -p scan-results
-        cp scan-result.json scan-results/helloworld-${{ github.sha }}.json
-        git config user.name "ci-bot"
-        git config user.email "ci@pipeline.local"
-        git add scan-results/
-        git commit -m "Add scan result for ${{ github.sha }}" || echo "Nothing to commit"
-        git remote set-url origin https://x-access-token:${{ secrets.GH_PAT }}@github.com/${{ github.repository }}
-        git push origin HEAD:${{ github.ref_name }}
+        ./bin/trivy image --format json \
+        --output scan-results/helloworld-${{ github.sha }}.json \
+        ${{ secrets.DOCKER_USERNAME }}/helloworld:${{ github.sha }}
 
-    - name: Test PAT permissions
-      run: |
-        git ls-remote https://x-access-token:${{ secrets.GH_PAT }}@github.com/${{ github.repository }} HEAD
-
+    - name: Upload Scan Results Artifact (Only on release/dev) ✅
+      if: github.ref == 'refs/heads/release/dev'
+      uses: actions/upload-artifact@v3
+      with:
+        name: scan-results-${{ github.sha }}
+        path: scan-results/

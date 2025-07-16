@@ -2,3 +2,4 @@ echo "__pycache__/" >> .gitignore
 echo "*.pyc" >> .gitignore
 echo "scan-result.json" >> .gitignore
 echo "*.DS_Store" >> .gitignore
+scan-results/
